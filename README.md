@@ -1,135 +1,129 @@
-cricket-live/
-│── index.html
-│── style.css
-│── script.js
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Live Cricket Score</title>
-<link rel="stylesheet" href="style.css">
+<title>Live Cricket</title>
+
+<style>
+body{margin:0;font-family:Arial;background:#f1f5f9}
+header{background:#009270;color:#fff;padding:10px;display:flex;justify-content:space-between}
+button{padding:6px 10px;border:none;border-radius:4px;background:#009270;color:#fff}
+input{padding:8px;margin:5px;width:90%}
+.card{background:#fff;padding:10px;margin:8px;border-radius:6px}
+nav{position:fixed;bottom:0;width:100%;background:#fff;display:flex;justify-content:space-around;border-top:1px solid #ccc;padding:6px}
+.hide{display:none}
+.center{text-align:center;padding-top:40px}
+</style>
 </head>
 
 <body>
 
-<!-- HEADER -->
-<header class="topbar">
-  <div class="menu">☰</div>
-  <div class="logo">cricbuzz</div>
-  <button class="appbtn">GET APP</button>
+<header>
+  <b>cricbuzz</b>
+  <button onclick="showLogin()">Login</button>
 </header>
 
-<!-- MATCH LIST -->
-<div class="content">
-  <h3 class="section-title">Live Matches</h3>
-  <div id="matches">
-    <p>Loading live matches...</p>
-  </div>
+<!-- HOME -->
+<div id="home">
+  <h3 style="padding:10px">Live Matches</h3>
+  <div id="matches" style="padding-bottom:60px">Loading...</div>
 </div>
 
-<!-- BOTTOM NAV -->
-<nav class="bottom-nav">
-  <span>Home</span>
-  <span>Matches</span>
-  <span>Series</span>
-  <span>Videos</span>
-  <span>News</span>
+<!-- LOGIN -->
+<div id="login" class="center hide">
+  <h2>Login</h2>
+  <input id="user" placeholder="Username">
+  <input id="pass" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <p id="msg"></p>
+  <p>Admin: admin / 1234</p>
+  <p>User: user / 1234</p>
+</div>
+
+<!-- ADMIN -->
+<div id="admin" class="center hide">
+  <h2>Admin Panel</h2>
+  <input id="scoreInput" placeholder="Enter Live Score">
+  <button onclick="saveScore()">Save Score</button><br><br>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="center hide">
+  <h2 id="dashTitle">Live Score</h2>
+  <p id="liveScore"></p>
+  <button onclick="bangla()">বাংলা</button>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<nav>
+  <span onclick="showHome()">Home</span>
+  <span onclick="showLogin()">Login</span>
 </nav>
 
-<script src="script.js"></script>
-</body>
-</html>body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f1f5f9;
-}
+<script>
+// 🔴 REAL API KEY বসাও
+const API_KEY = "YOUR_API_KEY_HERE";
 
-.topbar {
-  background: #009270;
-  color: white;
-  padding: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.logo {
-  font-weight: bold;
-  font-size: 20px;
-}
-
-.appbtn {
-  background: white;
-  color: #009270;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 5px;
-}
-
-.content {
-  padding: 12px;
-}
-
-.section-title {
-  margin-bottom: 10px;
-}
-
-.card {
-  background: white;
-  padding: 12px;
-  margin-bottom: 10px;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.card h4 {
-  margin: 0 0 5px 0;
-}
-
-.card p {
-  margin: 0;
-  color: #444;
-  font-size: 14px;
-}
-
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  background: white;
-  display: flex;
-  justify-content: space-around;
-  padding: 8px 0;
-  border-top: 1px solid #ccc;
-  font-size: 14px;
-}// 346
-const API_KEY = "PASTE_YOUR_REAL_API_KEY_HERE";
-
-const url = `https://api.cricapi.com/v1/currentMatches?apikey=${API_KEY}&offset=0`;
-
-fetch(url)
-  .then(res => res.json())
-  .then(data => {
-    let output = "";
-
-    if (!data.data || data.data.length === 0) {
-      output = "<p>No live matches now</p>";
-    } else {
-      data.data.forEach(match => {
-        output += `
-          <div class="card">
-            <h4>${match.name}</h4>
-            <p>${match.status}</p>
-            <p><b>Format:</b> ${match.matchType}</p>
-          </div>
-        `;
-      });
-    }
-
-    document.getElementById("matches").innerHTML = output;
-  })
-  .catch(() => {
-    document.getElementById("matches").innerHTML =
-      "<p>Failed to load live data</p>";
+// LOAD LIVE MATCHES
+fetch(`https://api.cricapi.com/v1/currentMatches?apikey=${API_KEY}&offset=0`)
+.then(res=>res.json())
+.then(data=>{
+ let out="";
+ if(data.data){
+  data.data.forEach(m=>{
+   out+=`<div class="card">
+    <b>${m.name}</b>
+    <p>${m.status}</p>
+   </div>`;
   });
+ }
+ document.getElementById("matches").innerHTML=out || "No live match";
+}).catch(()=>{});
+
+// UI FUNCTIONS
+function hideAll(){
+ home.classList.add("hide");
+ login.classList.add("hide");
+ admin.classList.add("hide");
+ dashboard.classList.add("hide");
+}
+function showHome(){hideAll();home.classList.remove("hide")}
+function showLogin(){hideAll();login.classList.remove("hide")}
+
+// LOGIN LOGIC
+function login(){
+ if(user.value=="admin" && pass.value=="1234"){
+  localStorage.role="admin";
+  hideAll();admin.classList.remove("hide");
+ }
+ else if(user.value=="user" && pass.value=="1234"){
+  localStorage.role="user";
+  liveScore.innerText=localStorage.score||"No score yet";
+  hideAll();dashboard.classList.remove("hide");
+ }
+ else msg.innerText="Wrong Login";
+}
+
+// ADMIN SAVE SCORE
+function saveScore(){
+ localStorage.score=scoreInput.value;
+ alert("Score Saved");
+}
+
+// DASHBOARD BANGLA
+function bangla(){
+ dashTitle.innerText="লাইভ স্কোর";
+ liveScore.innerText=localStorage.score||"কোনো স্কোর নেই";
+}
+
+// LOGOUT
+function logout(){
+ localStorage.clear();
+ showHome();
+}
+</script>
+
+</body>
+</html>
