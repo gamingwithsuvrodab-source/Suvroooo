@@ -1,30 +1,77 @@
-<audio id="bgMusic" loop>
-  <source src="song.mp3" type="audio/mpeg">
-</audio>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Glowing Heart</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<button id="playBtn">▶ TAP TO PLAY</button>
+<style>
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  background:#000;
+  overflow:hidden;
+}
+canvas{
+  display:block;
+}
+</style>
+</head>
 
-https://github.com/user-attachments/assets/feac3177-a466-4807-94f5-2927a32c7af9
-#playBtn{
-  position:fixed;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  padding:15px 30px;
-  font-size:18px;
-  border:none;
-  border-radius:30px;
-  background:#ff2d75;
-  color:#fff;
-  z-index:9999;
-}<script>
-const music = document.getElementById("bgMusic");
-const btn = document.getElementById("playBtn");
+<body>
 
-btn.addEventListener("click", () => {
-  music.volume = 0.8;
-  music.play();
-  btn.style.display = "none"; // button hide
-});
+<canvas id="c"></canvas>
+
+<script>
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+
+function resize(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener("resize", resize);
+
+let t = 0;
+
+function heart(t, scale){
+  const x = scale * 16 * Math.pow(Math.sin(t),3);
+  const y = -scale * (
+    13*Math.cos(t) -
+    5*Math.cos(2*t) -
+    2*Math.cos(3*t) -
+    Math.cos(4*t)
+  );
+  return {x,y};
+}
+
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.save();
+  ctx.translate(canvas.width/2, canvas.height/2);
+
+  for(let s=6; s<18; s++){
+    ctx.beginPath();
+    for(let i=0;i<Math.PI*2;i+=0.02){
+      const p = heart(i+t*0.4, s*4);
+      ctx.lineTo(p.x,p.y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = `rgba(255,0,60,${0.15 + s*0.02})`;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  ctx.restore();
+  t += 0.01;
+  requestAnimationFrame(draw);
+}
+
+draw();
 </script>
-  
+
+</body>
+</html>
