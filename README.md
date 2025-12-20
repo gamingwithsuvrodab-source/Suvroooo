@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Glowing Heart</title>
+<title>Growing Flower</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -14,14 +14,11 @@ html,body{
   background:#000;
   overflow:hidden;
 }
-canvas{
-  display:block;
-}
+canvas{display:block;}
 </style>
 </head>
 
 <body>
-
 <canvas id="c"></canvas>
 
 <script>
@@ -29,49 +26,78 @@ const canvas = document.getElementById("c");
 const ctx = canvas.getContext("2d");
 
 function resize(){
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
 }
 resize();
-window.addEventListener("resize", resize);
+addEventListener("resize", resize);
 
-let t = 0;
+let grow = 0;
 
-function heart(t, scale){
-  const x = scale * 16 * Math.pow(Math.sin(t),3);
-  const y = -scale * (
-    13*Math.cos(t) -
-    5*Math.cos(2*t) -
-    2*Math.cos(3*t) -
-    Math.cos(4*t)
-  );
-  return {x,y};
+function drawStem(x, y, len){
+  ctx.strokeStyle = "#3cff6b";
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x, y - len);
+  ctx.stroke();
 }
 
-function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.save();
-  ctx.translate(canvas.width/2, canvas.height/2);
+function drawLeaf(x, y, dir){
+  ctx.fillStyle = "#2ecc71";
+  ctx.beginPath();
+  ctx.ellipse(x + dir*18, y, 22, 10, dir, 0, Math.PI*2);
+  ctx.fill();
+}
 
-  for(let s=6; s<18; s++){
+function drawFlower(x, y, size){
+  for(let i=0;i<6;i++){
+    ctx.fillStyle = "#ffeb3b";
     ctx.beginPath();
-    for(let i=0;i<Math.PI*2;i+=0.02){
-      const p = heart(i+t*0.4, s*4);
-      ctx.lineTo(p.x,p.y);
-    }
-    ctx.closePath();
-    ctx.strokeStyle = `rgba(255,0,60,${0.15 + s*0.02})`;
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+    ctx.ellipse(
+      x + Math.cos(i)*size,
+      y + Math.sin(i)*size,
+      size, size/2,
+      i, 0, Math.PI*2
+    );
+    ctx.fill();
+  }
+  ctx.fillStyle="#ff9800";
+  ctx.beginPath();
+  ctx.arc(x,y,size/2,0,Math.PI*2);
+  ctx.fill();
+}
+
+function animate(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  const baseX = canvas.width/2;
+  const baseY = canvas.height*0.85;
+
+  grow += 0.8;
+  if(grow > 220) grow = 220;
+
+  drawStem(baseX, baseY, grow);
+
+  if(grow > 60) drawLeaf(baseX, baseY - 80, -1);
+  if(grow > 110) drawLeaf(baseX, baseY - 140, 1);
+
+  if(grow >= 220){
+    drawFlower(baseX, baseY - 220, 20);
   }
 
-  ctx.restore();
-  t += 0.01;
-  requestAnimationFrame(draw);
+  // floating particles
+  for(let i=0;i<25;i++){
+    ctx.fillStyle="rgba(255,255,255,0.03)";
+    ctx.beginPath();
+    ctx.arc(Math.random()*canvas.width,Math.random()*canvas.height,1,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  requestAnimationFrame(animate);
 }
 
-draw();
+animate();
 </script>
-
 </body>
 </html>
