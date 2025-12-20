@@ -1,138 +1,141 @@
-  CREATE DATABASE wallet_app;
-USE wallet_app;
+<!DOCTYPE html>
+<html>
+<head>
+<title>Facebook Style Site</title>
+<style>
+body{margin:0;font-family:Arial;background:#f0f2f5}
+.nav{background:#1877f2;color:white;padding:10px;font-size:22px}
+.container{width:500px;margin:auto;margin-top:20px}
+.card{background:white;padding:15px;border-radius:6px;margin-bottom:10px}
+input,textarea{width:100%;padding:8px;margin:5px 0}
+button{background:#1877f2;color:white;border:none;padding:8px;width:100%;cursor:pointer}
+.post{border-top:1px solid #ddd;padding-top:10px;margin-top:10px}
+small{color:gray}
+.like{color:blue;cursor:pointer}
+.hide{display:none}
+</style>
+</head>
 
-CREATE TABLE users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  username VARCHAR(50),
-  password VARCHAR(255),
-  balance DECIMAL(10,2) DEFAULT 0
-);
+<body>
 
-CREATE TABLE transactions (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT,
-  amount DECIMAL(10,2),
-  type ENUM('deposit','withdraw'),
-  status ENUM('pending','approved'),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);const express = require('express');
-const mysql = require('mysql');
-const bcrypt = require('bcrypt');
-const app = express();
+<div class="nav">facebook</div>
 
-app.use(express.json());
-app.use(express.static('public'));
+<div class="container">
 
-const db = mysql.createConnection({
-  host:'localhost',
-  user:'root',
-  password:'',
-  database:'wallet_app'
-});
-
-db.connect();
-
-// Register
-app.post('/register', async (req,res)=>{
-  const {username,password} = req.body;
-  const hash = await bcrypt.hash(password,10);
-  db.query(
-    "INSERT INTO users(username,password) VALUES (?,?)",
-    [username,hash],
-    ()=>res.send("Registered")
-  );
-});
-
-// Login
-app.post('/login',(req,res)=>{
-  const {username,password} = req.body;
-  db.query(
-    "SELECT * FROM users WHERE username=?",
-    [username],
-    async (err,result)=>{
-      if(result.length && await bcrypt.compare(password,result[0].password)){
-        res.json(result[0]);
-      } else res.status(401).send("Invalid");
-    }
-  );
-});
-
-// Deposit (Demo)
-app.post('/deposit',(req,res)=>{
-  const {user_id,amount} = req.body;
-  db.query(
-    "INSERT INTO transactions(user_id,amount,type,status) VALUES (?,?, 'deposit','approved')",
-    [user_id,amount]
-  );
-  db.query(
-    "UPDATE users SET balance = balance + ? WHERE id=?",
-    [amount,user_id]
-  );
-  res.send("Deposit Success");
-});
-
-// Withdraw
-app.post('/withdraw',(req,res)=>{
-  const {user_id,amount} = req.body;
-  db.query(
-    "INSERT INTO transactions(user_id,amount,type,status) VALUES (?,?, 'withdraw','pending')",
-    [user_id,amount]
-  );
-  res.send("Withdraw Requested");
-});
-
-app.listen(3000,()=>console.log("Server running"));<input id="u" placeholder="Username">
-<input id="p" type="password" placeholder="Password">
-<button onclick="reg()">Register</button>
-
-<script>
-function reg(){
- fetch('/register',{
-  method:'POST',
-  headers:{'Content-Type':'application/json'},
-  body:JSON.stringify({username:u.value,password:p.value})
- });
-}
-</script><input id="u">
-<input id="p" type="password">
+<!-- LOGIN -->
+<div id="login" class="card">
+<h3>Login</h3>
+<input id="lemail" placeholder="Email">
+<input id="lpass" type="password" placeholder="Password">
 <button onclick="login()">Login</button>
+<p onclick="showRegister()" style="cursor:pointer;color:blue">Create Account</p>
+</div>
+
+<!-- REGISTER -->
+<div id="register" class="card hide">
+<h3>Register</h3>
+<input id="rname" placeholder="Name">
+<input id="remail" placeholder="Email">
+<input id="rpass" type="password" placeholder="Password">
+<button onclick="register()">Register</button>
+</div>
+
+<!-- HOME -->
+<div id="home" class="hide">
+
+<div class="card">
+<b id="username"></b>
+<button onclick="logout()">Logout</button>
+</div>
+
+<div class="card">
+<textarea id="postText" placeholder="What's on your mind?"></textarea>
+<button onclick="addPost()">Post</button>
+</div>
+
+<div id="feed"></div>
+
+</div>
+</div>
 
 <script>
+let users = JSON.parse(localStorage.getItem("users")) || [];
+let posts = JSON.parse(localStorage.getItem("posts")) || [];
+let currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
+if(currentUser) showHome();
+
+function showRegister(){
+ login.classList.add("hide");
+ register.classList.remove("hide");
+}
+
+function register(){
+ let u={name:rname.value,email:remail.value,pass:rpass.value};
+ users.push(u);
+ localStorage.setItem("users",JSON.stringify(users));
+ alert("Registered");
+ location.reload();
+}
+
 function login(){
- fetch('/login',{
-  method:'POST',
-  headers:{'Content-Type':'application/json'},
-  body:JSON.stringify({username:u.value,password:p.value})
- })
- .then(r=>r.json())
- .then(d=>{
-   localStorage.setItem("user",JSON.stringify(d));
-   location='dashboard.html';
+ let u=users.find(x=>x.email==lemail.value && x.pass==lpass.value);
+ if(u){
+  localStorage.setItem("currentUser",JSON.stringify(u));
+  showHome();
+ }else alert("Wrong Login");
+}
+
+function showHome(){
+ login.classList.add("hide");
+ register.classList.add("hide");
+ home.classList.remove("hide");
+ username.innerText=currentUser.name;
+ loadPosts();
+}
+
+function logout(){
+ localStorage.removeItem("currentUser");
+ location.reload();
+}
+
+function addPost(){
+ let p={user:currentUser.name,text:postText.value,likes:0,comments:[]};
+ posts.unshift(p);
+ localStorage.setItem("posts",JSON.stringify(posts));
+ postText.value="";
+ loadPosts();
+}
+
+function loadPosts(){
+ feed.innerHTML="";
+ posts.forEach((p,i)=>{
+  feed.innerHTML+=`
+  <div class="card post">
+   <b>${p.user}</b>
+   <p>${p.text}</p>
+   <span class="like" onclick="like(${i})">Like (${p.likes})</span>
+   <div>
+    <input placeholder="Comment" onkeydown="if(event.key=='Enter')comment(${i},this)">
+    ${p.comments.map(c=>"<small>"+c+"</small><br>").join("")}
+   </div>
+  </div>`;
  });
 }
-                       </script><h2 id="bal"></h2>
 
-<input id="amt" placeholder="Amount">
-<button onclick="dep()">Deposit</button>
-<button onclick="wd()">Withdraw</button>
-
-<script>
-let u = JSON.parse(localStorage.getItem("user"));
-bal.innerText = "Balance: "+u.balance;
-
-function dep(){
- fetch('/deposit',{
-  method:'POST',
-  headers:{'Content-Type':'application/json'},
-  body:JSON.stringify({user_id:u.id,amount:amt.value})
- }).then(()=>alert("Deposited"));
+function like(i){
+ posts[i].likes++;
+ localStorage.setItem("posts",JSON.stringify(posts));
+ loadPosts();
 }
 
-function wd(){
- fetch('/withdraw',{
-  method:'POST',
-  headers:{'Content-Type':'application/json'},
-  body:JSON.stringify({user_id:u.id,amount:amt.value})
- }).then(()=>alert("Withdraw Requested"));
+function comment(i,el){
+ posts[i].comments.push(el.value);
+ el.value="";
+ localStorage.setItem("posts",JSON.stringify(posts));
+ loadPosts();
 }
-       </script>
+</script>
+
+</body>
+</html>
